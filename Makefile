@@ -45,4 +45,4 @@ voyCom_a_distribuer.o : voyCom_a_distribuer.c
 
 $(CLEAN):
 	$(ECHO) --- NETTOYAGE ---
-	$(RM) $(RMFLAGS) $(OBJ) $(EXE) #Core 
+	$(RM) $(RMFLAGS) $(OBJ) #$(EXE) #Core 

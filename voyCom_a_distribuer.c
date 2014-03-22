@@ -6,8 +6,11 @@
 #include <sys/time.h>
 #include <assert.h>
 
-#define MAXMOT 256
-#define MAXS 500
+#define MAXMOT 				256
+#define MAXS 				500
+#define EXACT_NAIF_NB_VILLES 		12
+#define EXACT_BRANCH_BOUND_NB_VILLES 	12
+#define APPROCHE_PPV_NB_VILLES		50
 
 /**
  * Structure pour representer un cycle
@@ -250,6 +253,7 @@ int est_dans_chemin(t_cycle * chemin, int ville)
 	return 0;
 }
 
+// TODO: a commenter
 void recopie_chemin(t_cycle * cheminRef, t_cycle * cheminOP){
 	cheminOP->taille = cheminRef->taille;
 	cheminOP->poids = cheminRef->poids;
@@ -303,7 +307,7 @@ void PVC_exact_naif(int nbVille,double **distance, t_cycle *  chemin, t_cycle * 
  * @param [distances] 
  */
 void PVC_exact_branch_and_bound(int nbVille,double **distance, t_cycle *  chemin, t_cycle * meilleur)
-{
+{ 
         if( chemin->taille == nbVille)
         {       //printf("if: %d\n",chemin->taille);
                 chemin->poids += distance[chemin->c[0]][chemin->c[chemin->taille-1]];
@@ -335,6 +339,12 @@ void PVC_exact_branch_and_bound(int nbVille,double **distance, t_cycle *  chemin
         }
 }
 
+/**
+ * Approxime le chemin le plus court par plus proche voisin
+ *
+ * @param [nbVille] 
+ * @param [distances] 
+ */
 void PVC_approche_ppv(int nbVille,double **distance, t_cycle *  chemin)
 {
 	int j;
@@ -344,7 +354,7 @@ void PVC_approche_ppv(int nbVille,double **distance, t_cycle *  chemin)
 	double distanceMinimale = 64000.0;
 	int villePlusProche;
 	for(i=0;i<nbVille;i++)
-	{//FIXME segfault
+	{
 		if(distance[chemin->c[chemin->taille-1]][i]<distanceMinimale && !est_dans_chemin(chemin,i))
 		{
 			distanceMinimale = distance[chemin->c[chemin->taille-1]][i];
@@ -381,7 +391,7 @@ int main (int argc, char *argv[])
   clock_gettime(CLOCK_REALTIME, &current); //Linux gettime
   double elapsed_in_ms =    (( current.tv_sec - myTimerStart.tv_sec) *1000 +
           ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
-  printf("Temps passé (ms) : %lf\n", elapsed_in_ms);
+  printf("Temps passe (ms) : %lf\n", elapsed_in_ms);
   
   t_cycle chemin;
   chemin.taille = 1;
@@ -393,18 +403,67 @@ int main (int argc, char *argv[])
   meilleur.poids =64000;
   meilleur.c[0] = 1;
 
-  //PVC_exact_naif(6,distances, &chemin,&meilleur);
-  //PVC_exact_branch_and_bound(15,distances, &chemin,&meilleur);
-  PVC_approche_ppv(20,distances, &chemin);
+  int i = 0;
+
+  printf("\033[0;35m%s\033[0m\n","Exact naif:");
+
+  for(i= 1; i<= EXACT_NAIF_NB_VILLES;i++)
+  {
+	chemin.taille = 1;
+	chemin.poids =0;
+	chemin.c[0] = 1;
+	meilleur.taille = 1;
+	meilleur.poids =64000;
+	meilleur.c[0] = 1;
+	clock_gettime(CLOCK_REALTIME, &myTimerStart);
+	PVC_exact_naif(i,distances, &chemin,&meilleur);
+	clock_gettime(CLOCK_REALTIME, &current); //Linux gettime
+	elapsed_in_ms =    (( current.tv_sec - myTimerStart.tv_sec) *1000 +
+		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
+	printf("[Exact naif, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
+  }
+
+  printf("\033[0;35m%s\033[0m\n","Exact branch and bound:");
+
+  for(i= 1; i<= EXACT_BRANCH_BOUND_NB_VILLES ;i++)
+  {
+	chemin.taille = 1;
+	chemin.poids =0;
+	chemin.c[0] = 1;
+	meilleur.taille = 1;
+	meilleur.poids =64000;
+	meilleur.c[0] = 1;
+	clock_gettime(CLOCK_REALTIME, &myTimerStart);
+	PVC_exact_branch_and_bound(i,distances, &chemin,&meilleur);
+	clock_gettime(CLOCK_REALTIME, &current); //Linux gettime
+	elapsed_in_ms =    (( current.tv_sec - myTimerStart.tv_sec) *1000 +
+		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
+	printf("[Exact branch and bound, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
+  } 
+
+  printf("\033[0;35m%s\033[0m\n","Approche ppv:");
+
+  for(i= 1; i<= APPROCHE_PPV_NB_VILLES ;i+=2)
+  {
+	chemin.taille = 0;
+	chemin.poids =0;
+	chemin.c[0] = 1;
+	clock_gettime(CLOCK_REALTIME, &myTimerStart);
+	PVC_approche_ppv(i,distances, &chemin);
+	clock_gettime(CLOCK_REALTIME, &current); //Linux gettime
+	elapsed_in_ms =    (( current.tv_sec - myTimerStart.tv_sec) *1000 +
+		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
+	printf("[Approche PPV, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
+  }
   /*int i = 0;  
   for(i = 0;i<5; i++)
   {	
 	printf("%d\n",meilleur.c[i]);
   }*/
-  printf("%d\n",meilleur.taille);
-  printf("%f\n",meilleur.poids);
-  afficher_cycle_html(chemin, abscisses, ordonnees);
-
+//  printf("%d\n",meilleur.taille);
+//  printf("%f\n",meilleur.poids);
+//  afficher_cycle_html(chemin, abscisses, ordonnees);
+//
   //Affichage des distances
   //afficher_distances(nb_villes,distances);
 

@@ -1,0 +1,3 @@
+Exact branch and bound:
+temps d'exécution parfois plus élevé que exact naif ... normal ou non ?
+(algo plus compexe => time +, mais élimine des cas => time - ... se porrait-il que pour les premières valeurs il n'ait aucun cas à évacuer? peu probable)
