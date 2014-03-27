@@ -455,25 +455,26 @@ int main (int argc, char *argv[])
 		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
 	printf("[Approche PPV, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
   }
-  /*int i = 0;  
-  for(i = 0;i<5; i++)
-  {	
-	printf("%d\n",meilleur.c[i]);
-  }*/
-//  printf("%d\n",meilleur.taille);
-//  printf("%f\n",meilleur.poids);
-//  afficher_cycle_html(chemin, abscisses, ordonnees);
-//
+
+  //int i = 0;  
+  //for(i = 0;i<5; i++)
+  //{	
+  //      printf("%d\n",meilleur.c[i]);
+  //}
+  //printf("%d\n",meilleur.taille);
+  //printf("%f\n",meilleur.poids);
+  //afficher_cycle_html(chemin, abscisses, ordonnees);
+  //
   //Affichage des distances
   //afficher_distances(nb_villes,distances);
 
-  //naif
-  /*t_cycle cycle;
-  cycle.taille=3;
-  cycle.c[0]=0;
-  cycle.c[1]=1;
-  cycle.c[2]=2;
-  afficher_cycle_html(cycle, abscisses, ordonnees);*/
+  ////naif
+  //t_cycle cycle;
+  //cycle.taille=3;
+  //cycle.c[0]=0;
+  //cycle.c[1]=1;
+  //cycle.c[2]=2;
+  //afficher_cycle_html(cycle, abscisses, ordonnees);
   
   double ** Aretes =  trier_aretes(nb_villes, distances);
   /// <-- Kruskal Here
