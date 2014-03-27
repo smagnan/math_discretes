@@ -371,12 +371,13 @@ void PVC_approche_ppv(int nbVille,double **distance, t_cycle *  chemin)
 }
 
 int rechercher_racine(int u , int* pi){
-	int v;
+	int v = 0;
 	while(v != -1 )
 	{
 		v= pi[u];
 		if(v==-1)
 		{
+			printf("Rech racine\n");
 			return u;
 		}
 		u = v;
@@ -386,14 +387,14 @@ int rechercher_racine(int u , int* pi){
 
 double ** calcul_ACM(int nbVille,double **distance)
 {
-	int pi [nbVille] ;
+	int pi [nbVille] ;// parent
 	int hauteur [nbVille] ;
 
-	double ** T =(double **) calloc(nbVille,sizeof(double *));
-	double ** K =(double **) calloc(nbVille,sizeof(double *));
+	double ** T =(double **) calloc((nbVille-1)*nbVille/2,sizeof(double *));
+	double ** K =(double **) calloc((nbVille-1)*nbVille/2,sizeof(double *));
 	int i;
 	int pos=0;
-	for(i=0; i< nbVille; i++)
+	for(i=0; i< (nbVille-1)*nbVille/2; i++)
 	{
 		T[i]= (double *) calloc(3,sizeof(double));
 		K[i]= (double *) calloc(2,sizeof(double));
@@ -406,7 +407,7 @@ double ** calcul_ACM(int nbVille,double **distance)
 	}
 	T = trier_aretes(nbVille, distance);
 
-	for(i=0 ; i<nbVille; i++) // initialisation des tableaux à 0
+	for(i=0 ; i<(nbVille-1)*nbVille/2; i++) // initialisation des tableaux à 0
 	{
 		printf("T: %f-%f\n",T[i][0],T[i][1]);
 	}
@@ -414,7 +415,7 @@ double ** calcul_ACM(int nbVille,double **distance)
 	int s,t,r1,r2;
 	i=0;
 
-	while(pos< nbVille-1)
+	while(i< (nbVille-1)*nbVille/2-1)
 	{
 		s = T[i][0];	
 		t = T[i][1];
