@@ -8,9 +8,9 @@
 
 #define MAXMOT 				256
 #define MAXS 				500
-#define EXACT_NAIF_NB_VILLES 		12
-#define EXACT_BRANCH_BOUND_NB_VILLES 	12
-#define APPROCHE_PPV_NB_VILLES		50
+#define EXACT_NAIF_NB_VILLES 		11
+#define EXACT_BRANCH_BOUND_NB_VILLES 	11
+#define APPROCHE_PPV_NB_VILLES		10
 
 /**
  * Structure pour representer un cycle
@@ -208,6 +208,7 @@ double **trier_aretes(const int n, double **d)
   
   //Appel au quicksort avec la bonne fonction de comparaison
   qsort(T, a, sizeof(T[0]), comparer);
+
   
 
   //Decommenter pour vérifier le tri
@@ -350,23 +351,104 @@ void PVC_approche_ppv(int nbVille,double **distance, t_cycle *  chemin)
 	int j;
 	for(j=0;j<nbVille;j++)
 	{
-	int i;
-	double distanceMinimale = 64000.0;
-	int villePlusProche;
-	for(i=0;i<nbVille;i++)
-	{
-		if(distance[chemin->c[chemin->taille-1]][i]<distanceMinimale && !est_dans_chemin(chemin,i))
+		int i;
+		double distanceMinimale = 64000.0;
+		int villePlusProche;
+		for(i=0;i<nbVille;i++)
 		{
-			distanceMinimale = distance[chemin->c[chemin->taille-1]][i];
-			villePlusProche = i;
+			if(distance[chemin->c[chemin->taille-1]][i]<distanceMinimale && !est_dans_chemin(chemin,i))
+			{
+				distanceMinimale = distance[chemin->c[chemin->taille-1]][i];
+				villePlusProche = i;
+			}
 		}
-	}
-	chemin->c[chemin->taille] = villePlusProche;
-	chemin->taille++;
-	chemin->poids+=distanceMinimale;
+		chemin->c[chemin->taille] = villePlusProche;
+		chemin->taille++;
+		chemin->poids+=distanceMinimale;
 	}
 
 	chemin->poids += distance[chemin->c[0]][chemin->c[chemin->taille-1]];
+}
+
+int rechercher_racine(int u , int* pi){
+	int v;
+	while(v != -1 )
+	{
+		v= pi[u];
+		if(v==-1)
+		{
+			return u;
+		}
+		u = v;
+	}
+	return u;
+}
+
+double ** calcul_ACM(int nbVille,double **distance)
+{
+	int pi [nbVille] ;
+	int hauteur [nbVille] ;
+
+	double ** T =(double **) calloc(nbVille,sizeof(double *));
+	double ** K =(double **) calloc(nbVille,sizeof(double *));
+	int i;
+	int pos=0;
+	for(i=0; i< nbVille; i++)
+	{
+		T[i]= (double *) calloc(3,sizeof(double));
+		K[i]= (double *) calloc(2,sizeof(double));
+	}
+
+	for(i=0 ; i<nbVille; i++) // initialisation des tableaux à 0
+	{
+		pi[i]= -1;
+		hauteur[i]=0;
+	}
+	T = trier_aretes(nbVille, distance);
+
+	for(i=0 ; i<nbVille; i++) // initialisation des tableaux à 0
+	{
+		printf("T: %f-%f\n",T[i][0],T[i][1]);
+	}
+
+	int s,t,r1,r2;
+	i=0;
+
+	while(pos< nbVille-1)
+	{
+		s = T[i][0];	
+		t = T[i][1];
+		r1 = rechercher_racine(s, pi);
+		r2 = rechercher_racine(t, pi);
+		printf("s: %d\n",s);			
+		printf("t: %d\n",t);			
+
+		if(r1!=r2)
+		{
+			K[pos][0] = s;
+			K[pos][1] = t;
+			
+			if(hauteur[r1]> hauteur[r2])
+			{
+				pi[r1] = r2;
+			}
+			else
+			{
+				pi[r2] = r1;
+
+				if(hauteur[r1] == hauteur[r2])
+				{
+					hauteur[r2] ++;
+				}
+		
+			}
+			pos++;
+			printf("pos: %d\n",pos);	
+		}
+		i++;
+		printf("i: %d\n",i);	
+	}
+	return K;
 }
 
 /**
@@ -443,7 +525,7 @@ int main (int argc, char *argv[])
 
   printf("\033[0;35m%s\033[0m\n","Approche ppv:");
 
-  for(i= 1; i<= APPROCHE_PPV_NB_VILLES ;i+=2)
+  for(i= 1; i<= APPROCHE_PPV_NB_VILLES ;i++)
   {
 	chemin.taille = 0;
 	chemin.poids =0;
@@ -455,6 +537,14 @@ int main (int argc, char *argv[])
 		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
 	printf("[Approche PPV, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
   }
+  double ** K;	
+  int nbVilles = 10;
+  K=calcul_ACM(nbVilles, distances);
+  printf("Avec %d villes (%d a %d)\n",nbVilles,0,nbVilles-1);
+  for(i=0; i< nbVilles-1; i++)
+  {
+	printf("k: %f-%f\n", K[i][0],K[i][1]);
+  }
 
   //int i = 0;  
   //for(i = 0;i<5; i++)
@@ -463,7 +553,7 @@ int main (int argc, char *argv[])
   //}
   //printf("%d\n",meilleur.taille);
   //printf("%f\n",meilleur.poids);
-  //afficher_cycle_html(chemin, abscisses, ordonnees);
+  afficher_cycle_html(chemin, abscisses, ordonnees);
   //
   //Affichage des distances
   //afficher_distances(nb_villes,distances);

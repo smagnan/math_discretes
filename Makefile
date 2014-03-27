@@ -2,7 +2,7 @@
 #----------
 COMP=gcc
 EDL=gcc
-EXE=voyCom_a_distribuer
+EXE=B3154_Exe
 #Flags:
 CPPFLAGS=-g
 EDLFLAGS=
