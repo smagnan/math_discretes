@@ -8,9 +8,17 @@
 
 #define MAXMOT 				256
 #define MAXS 				500
-#define EXACT_NAIF_NB_VILLES 		11
-#define EXACT_BRANCH_BOUND_NB_VILLES 	11
-#define APPROCHE_PPV_NB_VILLES		10
+#define EXACT_NAIF_NB_VILLES 		10
+#define EXACT_BRANCH_BOUND_NB_VILLES 	10
+#define APPROCHE_PPV_NB_VILLES		20
+#define CALCUL_ACM			30
+
+#define SHELLSCRIPT "\
+#/bin/bash \n\
+echo \"Arbre couvrant minimal:\" \n\
+dot -Tpng -o tree.png arbreCouvrantMin.dot \n\
+eog tree.png \n\
+"
 
 /**
  * Structure pour representer un cycle
@@ -370,6 +378,7 @@ void PVC_approche_ppv(int nbVille,double **distance, t_cycle *  chemin)
 	chemin->poids += distance[chemin->c[0]][chemin->c[chemin->taille-1]];
 }
 
+// TODO à commenter
 int rechercher_racine(int u , int* pi){
 	int v = 0;
 	while(v != -1 )
@@ -377,7 +386,7 @@ int rechercher_racine(int u , int* pi){
 		v= pi[u];
 		if(v==-1)
 		{
-			printf("Rech racine\n");
+			//printf("Rech racine\n");
 			return u;
 		}
 		u = v;
@@ -385,6 +394,7 @@ int rechercher_racine(int u , int* pi){
 	return u;
 }
 
+// TODO à commenter
 double ** calcul_ACM(int nbVille,double **distance)
 {
 	int pi [nbVille] ;// parent
@@ -407,10 +417,10 @@ double ** calcul_ACM(int nbVille,double **distance)
 	}
 	T = trier_aretes(nbVille, distance);
 
-	for(i=0 ; i<(nbVille-1)*nbVille/2; i++) // initialisation des tableaux à 0
-	{
-		printf("T: %f-%f\n",T[i][0],T[i][1]);
-	}
+	//for(i=0 ; i<(nbVille-1)*nbVille/2; i++) 
+	//{
+	//	printf("T: %f-%f\n",T[i][0],T[i][1]);
+	//}
 
 	int s,t,r1,r2;
 	i=0;
@@ -421,8 +431,8 @@ double ** calcul_ACM(int nbVille,double **distance)
 		t = T[i][1];
 		r1 = rechercher_racine(s, pi);
 		r2 = rechercher_racine(t, pi);
-		printf("s: %d\n",s);			
-		printf("t: %d\n",t);			
+		//printf("s: %d\n",s);			
+		//printf("t: %d\n",t);			
 
 		if(r1!=r2)
 		{
@@ -444,11 +454,12 @@ double ** calcul_ACM(int nbVille,double **distance)
 		
 			}
 			pos++;
-			printf("pos: %d\n",pos);	
+			//printf("pos: %d\n",pos);	
 		}
 		i++;
-		printf("i: %d\n",i);	
+		//printf("i: %d\n",i);	
 	}
+	supprimer_aretes(nbVille, T); // On free les arrêtes créées
 	return K;
 }
 
@@ -488,6 +499,8 @@ int main (int argc, char *argv[])
 
   int i = 0;
 
+  // ------------------------------------ Exact naif
+
   printf("\033[0;35m%s\033[0m\n","Exact naif:");
 
   for(i= 1; i<= EXACT_NAIF_NB_VILLES;i++)
@@ -505,6 +518,8 @@ int main (int argc, char *argv[])
 		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
 	printf("[Exact naif, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
   }
+
+  // ---------------------------------- Exact B & B
 
   printf("\033[0;35m%s\033[0m\n","Exact branch and bound:");
 
@@ -524,8 +539,10 @@ int main (int argc, char *argv[])
 	printf("[Exact branch and bound, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
   } 
 
-  printf("\033[0;35m%s\033[0m\n","Approche ppv:");
+  // --------------------------------- Approche PPV
 
+  printf("\033[0;35m%s\033[0m\n","Approche ppv:");
+  
   for(i= 1; i<= APPROCHE_PPV_NB_VILLES ;i++)
   {
 	chemin.taille = 0;
@@ -538,15 +555,42 @@ int main (int argc, char *argv[])
 		  ( current.tv_nsec - myTimerStart.tv_nsec)/1000000.0);
 	printf("[Approche PPV, %d villes] Temps passe (ms) : %lf\n",i, elapsed_in_ms);
   }
+
+  // ----------------------------------------- ACM
+  
+  printf("\033[0;35m%s\033[0m\n","Calcul ACM:");
+  
   double ** K;	
-  int nbVilles = 10;
-  K=calcul_ACM(nbVilles, distances);
-  printf("Avec %d villes (%d a %d)\n",nbVilles,0,nbVilles-1);
+  int nbVilles = CALCUL_ACM;
+  FILE * arbreCouvrantMin = fopen ("arbreCouvrantMin.dot","w+");
+
+  fprintf(arbreCouvrantMin,"graph Tree\n{\n");
+ 
+  K = calcul_ACM(nbVilles, distances);
+
+  printf("Arbre couvrant minimal avec %d villes (%d a %d)\n",nbVilles,0,nbVilles-1);
+  //for(i=0; i< nbVilles-1; i++)
+  //{
+  //	fprintf(arbreCouvrantMin,"\t%d [pos = \"%f,%f!\"];\n",i, abscisses[i],1000*ordonnees[i]);
+  //}
   for(i=0; i< nbVilles-1; i++)
   {
 	printf("k: %f-%f\n", K[i][0],K[i][1]);
+  	fprintf(arbreCouvrantMin,"\t%d--%d;\n", (int)K[i][0],(int)K[i][1]);
   }
 
+  fprintf(arbreCouvrantMin,"}");
+  fclose(arbreCouvrantMin);
+
+  // ---------------------------------- Affichage
+  afficher_cycle_html(chemin, abscisses, ordonnees);
+  system(SHELLSCRIPT);
+
+  // ------------- Libérations mem et terminaison  
+  supprimer_distances_et_coordonnees(nb_villes, distances, abscisses, ordonnees);
+  return 0;
+
+  // ----------------------------- Stuff commenté
   //int i = 0;  
   //for(i = 0;i<5; i++)
   //{	
@@ -554,7 +598,6 @@ int main (int argc, char *argv[])
   //}
   //printf("%d\n",meilleur.taille);
   //printf("%f\n",meilleur.poids);
-  afficher_cycle_html(chemin, abscisses, ordonnees);
   //
   //Affichage des distances
   //afficher_distances(nb_villes,distances);
@@ -567,10 +610,8 @@ int main (int argc, char *argv[])
   //cycle.c[2]=2;
   //afficher_cycle_html(cycle, abscisses, ordonnees);
   
-  double ** Aretes =  trier_aretes(nb_villes, distances);
+  //double ** Aretes =  trier_aretes(nb_villes, distances);
   /// <-- Kruskal Here
-  supprimer_aretes(nb_villes, Aretes);
+  //supprimer_aretes(nb_villes, Aretes); XXX effectué directement dans calcul_ACM ...
 
-  supprimer_distances_et_coordonnees(nb_villes, distances, abscisses, ordonnees);
-  return 0;
 }
