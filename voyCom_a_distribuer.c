@@ -31,6 +31,8 @@ typedef struct t_cycle
 } t_cycle;     
 
 
+t_cycle hamilton_recur(t_cycle chemin, int nbVilles, double (* tree)[4],int iIn);
+
 /**
  * Charge le CSV des coordonnées des villes.
  * 
@@ -490,7 +492,11 @@ t_cycle cycle_hamiltonien_ACM(int nbVilles, double ** aretes)
 				}	
 			}
 		}
+		printf("tree:%d\n",aretes[i][1]);	
 	}
+
+	
+	printf("tree:%d\n",tree[0][1]);	
 
  	t_cycle chemin;
   	chemin.taille = 0;
@@ -503,17 +509,48 @@ t_cycle cycle_hamiltonien_ACM(int nbVilles, double ** aretes)
 		depart++;
 	}
 
-	if(tree
-	return chemin;
+	chemin.taille = 1;
+	chemin.c[0] = tree[depart][0];
+	return hamilton_recur(chemin,nbVilles,tree,depart);
 
 }
 
-t_cycle hamilton_recur(t_cycle chemin, int nbVilles, double ** tree)
+t_cycle hamilton_recur(t_cycle chemin, int nbVilles, double (* tree)[4], int iIn)
 {
-	int i;
-	while(tree[i][2]==-1 || tree[i][3]==-1)
+	int i = iIn;
+	printf("i:%d\n",i);
+	printf("tree:%d\n",tree[0][1]);	
+	while(!(tree[i][2]==-1 && tree[i][3]==-1))
 	{
-		
+
+		printf("i:%d\n",i);	
+
+		if(tree[i][2] != -1)
+		{
+			chemin.taille++;
+			chemin.c[chemin.taille-1] = tree[i][2];
+		}
+
+		if(!tree[i][2]==-1 && !tree[i][3]==-1)
+		{
+			chemin = hamilton_recur(chemin,nbVilles,tree,i);
+		}
+
+		if(tree[i][3] !=-1)
+		{
+			chemin.taille++;
+			chemin.c[chemin.taille-1] = tree[i][3];
+		}	
+
+		int j;
+		for(j = 0;j<nbVilles;j++)
+		{
+			if(chemin.c[chemin.taille-1]==tree[j][0])
+			{
+				i=j;
+				break;
+			}
+		}
 	}
 	return chemin;
 } 
@@ -640,6 +677,8 @@ int main (int argc, char *argv[])
   // ---------------------------------- Affichage
   afficher_cycle_html(chemin, abscisses, ordonnees);
   system(SHELLSCRIPT);
+
+  cycle_hamiltonien_ACM(nbVilles,K);
 
   // ------------- Libérations mem et terminaison  
   supprimer_distances_et_coordonnees(nb_villes, distances, abscisses, ordonnees);
