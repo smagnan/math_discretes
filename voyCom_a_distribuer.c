@@ -11,7 +11,7 @@
 #define EXACT_NAIF_NB_VILLES 		10
 #define EXACT_BRANCH_BOUND_NB_VILLES 	10
 #define APPROCHE_PPV_NB_VILLES		20
-#define CALCUL_ACM			30
+#define CALCUL_ACM			60
 
 #define SHELLSCRIPT "\
 #/bin/bash \n\
@@ -462,6 +462,61 @@ double ** calcul_ACM(int nbVille,double **distance)
 	supprimer_aretes(nbVille, T); // On free les arrêtes créées
 	return K;
 }
+
+t_cycle cycle_hamiltonien_ACM(int nbVilles, double ** aretes)
+{
+	int i;
+	int j;
+	double tree[nbVilles][4];
+	 
+	for(i=0;i<nbVilles;i++)
+	{
+		tree[i][0] = aretes[i][0];	
+		tree[i][1] = aretes[i][1];
+		tree[i][2] = -1;
+		tree[i][3] = -1;	
+		
+		for(j=0;j<nbVilles;j++)
+		{
+			if(i!=j)
+			{
+				if(tree[i][0] == aretes[j][0])
+				{
+					tree[i][2] = aretes[j][1];
+				}
+				else if(tree[i][0] == aretes[j][1])
+				{
+					tree[i][3] = aretes[j][0];
+				}	
+			}
+		}
+	}
+
+ 	t_cycle chemin;
+  	chemin.taille = 0;
+  	chemin.poids =0;
+  	chemin.c[0] = 1;
+	
+	int depart = 0;
+	while(!(tree[depart][2] == -1 && tree[depart][3] ==-1))
+	{
+		depart++;
+	}
+
+	if(tree
+	return chemin;
+
+}
+
+t_cycle hamilton_recur(t_cycle chemin, int nbVilles, double ** tree)
+{
+	int i;
+	while(tree[i][2]==-1 || tree[i][3]==-1)
+	{
+		
+	}
+	return chemin;
+} 
 
 /**
  * Fonction main.
